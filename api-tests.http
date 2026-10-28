@@ -1,0 +1,147 @@
+### ==============================================================================
+### Akatsuki's Draft - API Tests (.http / REST Client)
+### Base URL: http://localhost:5000
+### ==============================================================================
+
+@baseUrl = http://localhost:5000
+@userToken = your_user_jwt_token_here
+@adminToken = your_admin_jwt_token_here
+@postId = your_post_id_here
+
+### ------------------------------------------------------------------------------
+### 1. HEALTH CHECK
+### ------------------------------------------------------------------------------
+
+### Check API Health
+GET {{baseUrl}}/health
+Content-Type: application/json
+
+### ------------------------------------------------------------------------------
+### 2. AUTHENTICATION & USER PROFILE
+### ------------------------------------------------------------------------------
+
+### Register Standard User
+# @name registerUser
+POST {{baseUrl}}/auth/register
+Content-Type: application/json
+
+{
+  "name": "Itachi Uchiha",
+  "email": "itachi@akatsuki.draft",
+  "password": "Password123!"
+}
+
+### Login Standard User
+# @name loginUser
+POST {{baseUrl}}/auth/login
+Content-Type: application/json
+
+{
+  "email": "itachi@akatsuki.draft",
+  "password": "Password123!"
+}
+
+### Login Admin User
+# @name loginAdmin
+POST {{baseUrl}}/auth/login
+Content-Type: application/json
+
+{
+  "email": "admin@akatsuki.draft",
+  "password": "Admin@123456"
+}
+
+### Get Current User Profile (Protected)
+GET {{baseUrl}}/auth/me
+Authorization: Bearer {{userToken}}
+
+### ------------------------------------------------------------------------------
+### 3. USER POST MANAGEMENT
+### ------------------------------------------------------------------------------
+
+### Create Draft Post
+# @name createPost
+POST {{baseUrl}}/posts
+Content-Type: application/json
+Authorization: Bearer {{userToken}}
+
+{
+  "title": "The Art of Content Creation",
+  "description": "Exploration of modern storytelling techniques in digital media.",
+  "content": "Writing compelling content requires clarity, emotional resonance, and consistent focus on the target audience.",
+  "category": "Writing",
+  "image": "https://images.unsplash.com/photo-1455390582262-044cdead277a",
+  "status": "draft"
+}
+
+### Submit Post Directly as Pending
+POST {{baseUrl}}/posts
+Content-Type: application/json
+Authorization: Bearer {{userToken}}
+
+{
+  "title": "Understanding Collaborative Systems",
+  "description": "Architectural principles behind distributed editorial workflows.",
+  "content": "Editorial workflows thrive when permissions, statuses, and validation checks are strictly decoupled.",
+  "category": "Technology",
+  "status": "pending"
+}
+
+### Get Logged-in User's Posts (All Statuses)
+GET {{baseUrl}}/posts/my-posts?page=1&limit=10
+Authorization: Bearer {{userToken}}
+
+### Get Public List of Approved Posts (Search & Category Filter)
+GET {{baseUrl}}/posts?page=1&limit=10&category=Writing&search=clarity
+Content-Type: application/json
+
+### Get Single Approved Post by ID
+GET {{baseUrl}}/posts/{{postId}}
+Content-Type: application/json
+
+### Update Post (Edit title/content or change status to pending/draft)
+PATCH {{baseUrl}}/posts/{{postId}}
+Content-Type: application/json
+Authorization: Bearer {{userToken}}
+
+{
+  "title": "The Art of Content Creation - Revised",
+  "content": "Updated content emphasizing narrative structure, cadence, and reader engagement.",
+  "status": "pending"
+}
+
+### Delete Post (Owner or Admin only)
+DELETE {{baseUrl}}/posts/{{postId}}
+Authorization: Bearer {{userToken}}
+
+### ------------------------------------------------------------------------------
+### 4. ADMIN APPROVAL WORKFLOW
+### ------------------------------------------------------------------------------
+
+### List Pending Posts (Admin only)
+GET {{baseUrl}}/admin/posts/pending?page=1&limit=10
+Authorization: Bearer {{adminToken}}
+
+### Approve Pending Post (Admin only)
+PATCH {{baseUrl}}/admin/posts/approve/{{postId}}
+Content-Type: application/json
+Authorization: Bearer {{adminToken}}
+
+### Reject Pending Post with Optional Reason (Admin only)
+PATCH {{baseUrl}}/admin/posts/reject/{{postId}}
+Content-Type: application/json
+Authorization: Bearer {{adminToken}}
+
+{
+  "reason": "Please provide clearer examples and cite verifiable sources in the third section."
+}
+
+### ------------------------------------------------------------------------------
+### 5. AI CONTENT IMPROVEMENT
+### ------------------------------------------------------------------------------
+
+### Improve Post with Google Gemini AI (Creates a new draft post)
+POST {{baseUrl}}/ai/improve/{{postId}}
+Content-Type: application/json
+Authorization: Bearer {{userToken}}
+
